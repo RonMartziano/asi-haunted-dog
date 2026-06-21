@@ -1,0 +1,28 @@
+# ---- OS / editor junk ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# ---- Node / tooling ----
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# ---- Unity / asset-pack metadata ----
+*.meta
+
+# ---- Build snapshots (the canonical file is asi-haunted-dog.html) ----
+Asi-Game-v*.html
+Asi-Game-DEBUG.html
+Asi-Game-FIXED.html
+
+# ---- Scratch / preview / mock files ----
+assets/_*
+**/_preview*
+**/_prev_*
+*.tmp
+*.log

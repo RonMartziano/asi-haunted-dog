@@ -1,0 +1,10 @@
+Asi The Haunted Dog — third-party art credits
+==============================================
+Enemy characters (Orc & Soldier): "Tiny RPG Character Asset Pack — Free Soldier & Orc"
+Biome background (parallax + tileset): "Stringstar Fields"
+Spell/impact VFX: "Free Pixel Effects Pack"
+
+These were provided by the project owner as free asset packs. Keep each pack's
+original license/readme and provide attribution per the author's terms before
+any public release. Effect sprite sheets were re-sliced into single-row strips
+for web animation; no source art was altered in style.

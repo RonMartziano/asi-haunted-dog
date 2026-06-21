@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asi The Haunted Dog — Art & Vibe Board</title>
+<style>
+  :root{
+    --bg:#0c0a14; --panel:#15101f; --ink:#ece6ff; --muted:#9a8fc0;
+    --pup:#7c3aed; --pup2:#b14bff; --demon:#ff2d2d; --ember:#ffd23d; --good:#5aff7a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 700px at 50% -10%,#241640,#0c0a14);
+    color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:32px 20px 60px;}
+  .wrap{max-width:1080px;margin:0 auto;}
+  h1{font-size:34px;margin:0 0 4px;letter-spacing:.5px;}
+  h1 .glow{color:var(--pup2);text-shadow:0 0 18px rgba(177,75,255,.6);}
+  .sub{color:var(--muted);margin:0 0 26px;font-size:15px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid #2a2142;border-radius:18px;padding:20px;
+    box-shadow:0 18px 40px rgba(0,0,0,.45);}
+  .card.normal{border-color:#3a3158;}
+  .card.demon{border-color:#5a1f4a;background:linear-gradient(180deg,#1a0f24,#0f0a1a);
+    box-shadow:0 0 50px rgba(177,75,255,.25),0 18px 40px rgba(0,0,0,.5);}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 10px;
+    border-radius:999px;text-transform:uppercase;}
+  .tag.n{background:#26384a;color:#9fe3ff;}
+  .tag.d{background:#3a0f2a;color:#ff8aa8;}
+  .portrait{display:flex;justify-content:center;align-items:center;height:300px;margin:10px 0;}
+  .name{font-size:22px;font-weight:800;margin:6px 0 2px;}
+  .role{color:var(--muted);font-size:13px;margin:0 0 12px;}
+  .stat-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .chip{font-size:12px;padding:5px 9px;border-radius:8px;background:#211a36;border:1px solid #322753;}
+  .chip b{color:var(--ember);}
+  .chip.d b{color:var(--demon);}
+  p.flavor{font-size:13.5px;line-height:1.55;color:#cdc2ec;margin:12px 0 0;}
+  .section-title{font-size:13px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;
+    margin:34px 0 12px;border-bottom:1px solid #2a2142;padding-bottom:8px;}
+  .palette{display:flex;gap:10px;flex-wrap:wrap;}
+  .sw{width:84px;border-radius:12px;overflow:hidden;border:1px solid #2a2142;font-size:10px;}
+  .sw .col{height:54px;}
+  .sw .lab{padding:6px 8px;background:#15101f;color:var(--muted);}
+  .sw .lab b{display:block;color:var(--ink);font-size:11px;}
+  .moods{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media(max-width:760px){.moods{grid-template-columns:repeat(2,1fr);}}
+  .mood{background:#181226;border:1px solid #2a2142;border-radius:14px;padding:14px;}
+  .mood .ic{font-size:26px;}
+  .mood h4{margin:8px 0 4px;font-size:14px;}
+  .mood p{margin:0;font-size:12px;color:var(--muted);line-height:1.45;}
+  .ref{display:flex;gap:14px;align-items:flex-start;background:#181226;border:1px solid #2a2142;
+    border-radius:14px;padding:16px;}
+  .ref .dot{font-size:30px;}
+  .ref p{margin:0;font-size:13px;color:#cdc2ec;line-height:1.5;}
+  .note{font-size:12px;color:var(--muted);margin-top:24px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Asi <span class="glow">The Haunted Dog</span></h1>
+  <p class="sub">Art & vibe exploration — the hero, the curse, and the world's mood. Stylized from Asi's real photos.</p>
+
+  <div class="grid2">
+    <!-- NORMAL -->
+    <div class="card normal">
+      <span class="tag n">Hero Form</span>
+      <div class="portrait">
+        <svg width="240" height="240" viewBox="0 0 200 200">
+          <defs>
+            <radialGradient id="fur" cx="50%" cy="40%" r="70%">
+              <stop offset="0%" stop-color="#ffffff"/><stop offset="70%" stop-color="#f3efe6"/>
+              <stop offset="100%" stop-color="#d8cfbe"/>
+            </radialGradient>
+          </defs>
+          <path d="M150 150 q40 -10 30 -45 q-2 30 -34 30z" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+          <ellipse cx="100" cy="150" rx="58" ry="38" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+          <path d="M70 135 q30 25 60 0 q-12 32 -30 34 q-18 -2 -30 -34z" fill="#ffffff" opacity=".8"/>
+          <path d="M60 70 q-18 -30 -6 -52 q22 14 26 44z" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+          <path d="M140 70 q18 -30 6 -52 q-22 14 -26 44z" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+          <path d="M58 60 q-8 -18 -2 -32 q10 8 12 26z" fill="#e9c6c9" opacity=".7"/>
+          <path d="M142 60 q8 -18 2 -32 q-10 8 -12 26z" fill="#e9c6c9" opacity=".7"/>
+          <circle cx="100" cy="92" r="46" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+          <path d="M56 92 q-12 6 -10 18 q10 -2 14 -10z" fill="#fff"/>
+          <path d="M144 92 q12 6 10 18 q-10 -2 -14 -10z" fill="#fff"/>
+          <ellipse cx="84" cy="88" rx="7" ry="9" fill="#2a211c"/>
+          <ellipse cx="116" cy="88" rx="7" ry="9" fill="#2a211c"/>
+          <circle cx="86" cy="85" r="2.2" fill="#fff"/><circle cx="118" cy="85" r="2.2" fill="#fff"/>
+          <path d="M100 100 q-14 4 -10 18 q10 8 20 0 q4 -14 -10 -18z" fill="#fff"/>
+          <ellipse cx="100" cy="104" rx="7" ry="5.5" fill="#22201f"/>
+          <path d="M96 116 q4 16 8 16 q4 0 6 -14 q-7 4 -14 -2z" fill="#f08aa0" stroke="#d96f88" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="name">Asi</div>
+      <p class="role">The fluffy good boy · loyal, goofy, fearless</p>
+      <div class="stat-row">
+        <span class="chip">HP <b>120</b></span>
+        <span class="chip">ATK <b>18</b></span>
+        <span class="chip">DEF <b>4</b></span>
+        <span class="chip">SPD <b>10</b></span>
+      </div>
+      <p class="flavor">Soft cream coat, feathery ears, tongue always out. Bright and bouncy — the dog the
+      player falls in love with. Animations lean cute: tail wag, head tilt, happy panting idle.</p>
+    </div>
+
+    <!-- DEMON -->
+    <div class="card demon">
+      <span class="tag d">Demon Mode · Alter Ego</span>
+      <div class="portrait">
+        <svg width="240" height="240" viewBox="0 0 200 200">
+          <defs>
+            <radialGradient id="dfur" cx="50%" cy="40%" r="75%">
+              <stop offset="0%" stop-color="#efe9f5"/><stop offset="55%" stop-color="#c8bcd8"/>
+              <stop offset="100%" stop-color="#6b5a86"/>
+            </radialGradient>
+            <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#b14bff" stop-opacity="0"/>
+              <stop offset="78%" stop-color="#7c1fff" stop-opacity=".5"/>
+              <stop offset="100%" stop-color="#3a0a66" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <circle cx="100" cy="105" r="96" fill="url(#aura)"/>
+          <path d="M100 10 l9 26 l-18 0z M36 56 l-24 -10 l18 20z M164 56 l24 -10 l-18 20z" fill="#4a1d80" opacity=".6"/>
+          <path d="M150 150 q42 -12 30 -50 q-2 34 -36 34z" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+          <ellipse cx="100" cy="150" rx="58" ry="38" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+          <path d="M70 135 q30 25 60 0 q-12 32 -30 34 q-18 -2 -30 -34z" fill="#d9cfe8" opacity=".7"/>
+          <path d="M60 70 q-20 -32 -6 -54 q22 14 26 46z" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+          <path d="M140 70 q20 -32 6 -54 q-22 14 -26 46z" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+          <circle cx="100" cy="92" r="46" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+          <path d="M74 52 q-10 -22 -2 -34 q12 10 12 30z" fill="#2a1840" stroke="#150a26" stroke-width="1.5"/>
+          <path d="M126 52 q10 -22 2 -34 q-12 10 -12 30z" fill="#2a1840" stroke="#150a26" stroke-width="1.5"/>
+          <ellipse cx="84" cy="88" rx="8" ry="6" fill="#ff2d2d"/>
+          <ellipse cx="116" cy="88" rx="8" ry="6" fill="#ff2d2d"/>
+          <ellipse cx="84" cy="88" rx="3.5" ry="4.5" fill="#ffd23d"/>
+          <ellipse cx="116" cy="88" rx="3.5" ry="4.5" fill="#ffd23d"/>
+          <path d="M100 100 q-14 4 -10 18 q10 8 20 0 q4 -14 -10 -18z" fill="#cfc4e0"/>
+          <ellipse cx="100" cy="104" rx="7" ry="5.5" fill="#1a1326"/>
+          <path d="M92 116 l3 8 l3 -8z" fill="#fff"/><path d="M105 116 l3 8 l3 -8z" fill="#fff"/>
+          <path d="M96 118 q4 14 8 14 q4 0 6 -12 q-7 4 -14 -2z" fill="#b5305a" stroke="#7d1d3b" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="name" style="color:#ff8aa8">Haunted Asi</div>
+      <p class="role">The curse takes the wheel · feral, glowing, unstoppable</p>
+      <div class="stat-row">
+        <span class="chip d">ATK <b>×1.8</b></span>
+        <span class="chip d">Lifesteal <b>+12%</b></span>
+        <span class="chip d">Crit <b>frenzy</b></span>
+        <span class="chip d">Duration <b>5 turns</b></span>
+      </div>
+      <p class="flavor">Same silhouette, darker soul. Fur desaturates to violet-grey, eyes burn red-gold,
+      shadow horns and jagged aura. Transformation = screen shake, purple flash, a low growl. The
+      power fantasy beat of every run.</p>
+    </div>
+  </div>
+
+  <div class="section-title">Core Palette</div>
+  <div class="palette">
+    <div class="sw"><div class="col" style="background:#f3efe6"></div><div class="lab"><b>Asi Cream</b>#F3EFE6</div></div>
+    <div class="sw"><div class="col" style="background:#7c3aed"></div><div class="lab"><b>Haunt Purple</b>#7C3AED</div></div>
+    <div class="sw"><div class="col" style="background:#b14bff"></div><div class="lab"><b>Spirit Glow</b>#B14BFF</div></div>
+    <div class="sw"><div class="col" style="background:#ff2d2d"></div><div class="lab"><b>Demon Red</b>#FF2D2D</div></div>
+    <div class="sw"><div class="col" style="background:#ffd23d"></div><div class="lab"><b>Ember Gold</b>#FFD23D</div></div>
+    <div class="sw"><div class="col" style="background:#5aff7a"></div><div class="lab"><b>Vitality</b>#5AFF7A</div></div>
+    <div class="sw"><div class="col" style="background:#0c0a14"></div><div class="lab"><b>Void BG</b>#0C0A14</div></div>
+  </div>
+
+  <div class="section-title">Vibe Pillars</div>
+  <div class="moods">
+    <div class="mood"><div class="ic">🥹➡️😈</div><h4>Cute-meets-cursed</h4><p>Adorable hero, sinister alter ego. The tonal whiplash is the hook.</p></div>
+    <div class="mood"><div class="ic">🌙</div><h4>Moonlit dread</h4><p>Deep purples & void blacks, embers and spirit-glow as the only warm light.</p></div>
+    <div class="mood"><div class="ic">⚡</div><h4>Juicy feedback</h4><p>Screen shake, flashes, floating crits. Every tap feels powerful.</p></div>
+    <div class="mood"><div class="ic">🦴</div><h4>Cozy rogue-lite</h4><p>Low-stress auto-battle, big-reward upgrade choices. Capybara Go energy.</p></div>
+  </div>
+
+  <div class="section-title">Grounded in the real Asi</div>
+  <div class="ref">
+    <div class="dot">🐶</div>
+    <p>The concept keeps Asi's actual signature traits from your photos: the <b>cream-white fluffy coat</b>,
+    <b>feathered pointed ears</b>, <b>permanent happy tongue</b>, and that <b>plumed tail</b>. The unicorn-flower-crown
+    photo even inspired the demon-mode <b>horns</b> — a playful nod that turns sinister. Custom hand-drawn or
+    AI-assisted art later should preserve these so players recognize "that's Asi."</p>
+  </div>
+
+  <p class="note">These vector portraits are the in-game placeholder sprites used by the playable prototype
+  (same SVGs power the battle scene). They're a stylization target, not final art — next step is a proper
+  character sheet (idle / attack / transform / hit / victory frames) for both forms.</p>
+</div>
+</body>
+</html>

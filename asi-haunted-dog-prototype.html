@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Asi The Haunted Dog — Prototype</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#0c0a14;overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#fff;
+    -webkit-tap-highlight-color:transparent;}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  #game{width:100%;max-width:480px;height:100%;max-height:1040px;box-shadow:0 0 60px rgba(124,58,237,.35);}
+  canvas{display:block;border-radius:0;}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="game"></div></div>
+<script>
+/* =========================================================================
+   ASI THE HAUNTED DOG — playable vertical-slice prototype
+   Genre: rogue-lite auto-battle adventure (Capybara Go style core loop)
+   Signature mechanic: HAUNT METER -> DEMON MODE transformation
+   Built in Phaser 3. Single file. Runs on desktop + mobile browser.
+   ========================================================================= */
+
+/* ---------- Asi character art (inline SVG -> texture) ---------- */
+const ASI_NORMAL_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="fur" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/><stop offset="70%" stop-color="#f3efe6"/>
+      <stop offset="100%" stop-color="#d8cfbe"/>
+    </radialGradient>
+  </defs>
+  <!-- tail -->
+  <path d="M150 150 q40 -10 30 -45 q-2 30 -34 30z" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+  <!-- body -->
+  <ellipse cx="100" cy="150" rx="58" ry="38" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+  <!-- chest fluff -->
+  <path d="M70 135 q30 25 60 0 q-12 32 -30 34 q-18 -2 -30 -34z" fill="#ffffff" opacity=".8"/>
+  <!-- ears -->
+  <path d="M60 70 q-18 -30 -6 -52 q22 14 26 44z" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+  <path d="M140 70 q18 -30 6 -52 q-22 14 -26 44z" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+  <path d="M58 60 q-8 -18 -2 -32 q10 8 12 26z" fill="#e9c6c9" opacity=".7"/>
+  <path d="M142 60 q8 -18 2 -32 q-10 8 -12 26z" fill="#e9c6c9" opacity=".7"/>
+  <!-- head -->
+  <circle cx="100" cy="92" r="46" fill="url(#fur)" stroke="#cdbfa6" stroke-width="2"/>
+  <!-- cheek fluff -->
+  <path d="M56 92 q-12 6 -10 18 q10 -2 14 -10z" fill="#fff"/>
+  <path d="M144 92 q12 6 10 18 q-10 -2 -14 -10z" fill="#fff"/>
+  <!-- eyes -->
+  <ellipse cx="84" cy="88" rx="7" ry="9" fill="#2a211c"/>
+  <ellipse cx="116" cy="88" rx="7" ry="9" fill="#2a211c"/>
+  <circle cx="86" cy="85" r="2.2" fill="#fff"/><circle cx="118" cy="85" r="2.2" fill="#fff"/>
+  <!-- snout -->
+  <path d="M100 100 q-14 4 -10 18 q10 8 20 0 q4 -14 -10 -18z" fill="#fff"/>
+  <ellipse cx="100" cy="104" rx="7" ry="5.5" fill="#22201f"/>
+  <!-- tongue -->
+  <path d="M96 116 q4 16 8 16 q4 0 6 -14 q-7 4 -14 -2z" fill="#f08aa0" stroke="#d96f88" stroke-width="1.5"/>
+</svg>`;
+
+const ASI_DEMON_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="dfur" cx="50%" cy="40%" r="75%">
+      <stop offset="0%" stop-color="#efe9f5"/><stop offset="55%" stop-color="#c8bcd8"/>
+      <stop offset="100%" stop-color="#6b5a86"/>
+    </radialGradient>
+    <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#b14bff" stop-opacity=".0"/>
+      <stop offset="80%" stop-color="#7c1fff" stop-opacity=".45"/>
+      <stop offset="100%" stop-color="#3a0a66" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="110" r="92" fill="url(#aura)"/>
+  <!-- jagged shadow spikes -->
+  <path d="M100 14 l8 24 l-16 0z M40 60 l-22 -8 l16 18z M160 60 l22 -8 l-16 18z" fill="#4a1d80" opacity=".6"/>
+  <path d="M150 150 q42 -12 30 -50 q-2 34 -36 34z" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+  <ellipse cx="100" cy="150" rx="58" ry="38" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+  <path d="M70 135 q30 25 60 0 q-12 32 -30 34 q-18 -2 -30 -34z" fill="#d9cfe8" opacity=".7"/>
+  <path d="M60 70 q-20 -32 -6 -54 q22 14 26 46z" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+  <path d="M140 70 q20 -32 6 -54 q-22 14 -26 46z" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+  <circle cx="100" cy="92" r="46" fill="url(#dfur)" stroke="#4a3a66" stroke-width="2"/>
+  <!-- horns -->
+  <path d="M74 52 q-10 -22 -2 -34 q12 10 12 30z" fill="#2a1840" stroke="#150a26" stroke-width="1.5"/>
+  <path d="M126 52 q10 -22 2 -34 q-12 10 -12 30z" fill="#2a1840" stroke="#150a26" stroke-width="1.5"/>
+  <!-- glowing eyes -->
+  <ellipse cx="84" cy="88" rx="8" ry="6" fill="#ff2d2d"/>
+  <ellipse cx="116" cy="88" rx="8" ry="6" fill="#ff2d2d"/>
+  <ellipse cx="84" cy="88" rx="3.5" ry="4.5" fill="#ffd23d"/>
+  <ellipse cx="116" cy="88" rx="3.5" ry="4.5" fill="#ffd23d"/>
+  <!-- snout -->
+  <path d="M100 100 q-14 4 -10 18 q10 8 20 0 q4 -14 -10 -18z" fill="#cfc4e0"/>
+  <ellipse cx="100" cy="104" rx="7" ry="5.5" fill="#1a1326"/>
+  <!-- fangs -->
+  <path d="M92 116 l3 8 l3 -8z" fill="#fff"/><path d="M105 116 l3 8 l3 -8z" fill="#fff"/>
+  <!-- tongue -->
+  <path d="M96 118 q4 14 8 14 q4 0 6 -12 q-7 4 -14 -2z" fill="#b5305a" stroke="#7d1d3b" stroke-width="1.5"/>
+</svg>`;
+
+const ENEMY_SVGS = [
+`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><g>
+  <ellipse cx="80" cy="100" rx="46" ry="40" fill="#5b6b4a" stroke="#3c4731" stroke-width="3"/>
+  <path d="M50 70 l-12 -22 l20 10z M110 70 l12 -22 l-20 10z" fill="#3c4731"/>
+  <ellipse cx="64" cy="92" rx="9" ry="11" fill="#f7e04a"/><ellipse cx="96" cy="92" rx="9" ry="11" fill="#f7e04a"/>
+  <circle cx="64" cy="93" r="4" fill="#111"/><circle cx="96" cy="93" r="4" fill="#111"/>
+  <path d="M58 120 q22 -14 44 0 l-6 8 -8 -6 -6 6 -8 -6 -6 6z" fill="#2a3220"/>
+</g></svg>`,
+`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><g>
+  <path d="M80 30 q40 0 44 50 q4 50 -44 56 q-48 -6 -44 -56 q4 -50 44 -50z" fill="#6a3b8f" stroke="#3d1f5c" stroke-width="3"/>
+  <path d="M52 46 l-14 -20 l22 8z M108 46 l14 -20 l-22 8z" fill="#3d1f5c"/>
+  <ellipse cx="64" cy="86" rx="10" ry="12" fill="#caff5c"/><ellipse cx="96" cy="86" rx="10" ry="12" fill="#caff5c"/>
+  <circle cx="64" cy="88" r="4.5" fill="#160a22"/><circle cx="96" cy="88" r="4.5" fill="#160a22"/>
+  <path d="M60 118 q20 16 40 0 l-5 -8 -7 6 -6 -6 -5 6z" fill="#2a1140"/>
+</g></svg>`,
+`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><g>
+  <ellipse cx="80" cy="96" rx="50" ry="46" fill="#b23a3a" stroke="#6e1f1f" stroke-width="3"/>
+  <path d="M44 60 l-10 -26 l20 14z M116 60 l10 -26 l-20 14z" fill="#6e1f1f"/>
+  <ellipse cx="62" cy="90" rx="11" ry="13" fill="#ffd23d"/><ellipse cx="98" cy="90" rx="11" ry="13" fill="#ffd23d"/>
+  <circle cx="62" cy="92" r="5" fill="#111"/><circle cx="98" cy="92" r="5" fill="#111"/>
+  <path d="M56 122 q24 -18 48 0 l-7 9 -9 -7 -7 7 -9 -7 -7 7z" fill="#3a0f0f"/>
+</g></svg>`
+];
+
+/* ---------- Game data / balance ---------- */
+const SAVE_KEY = 'asi_haunted_dog_save_v1';
+const GAME = {
+  stage: 1,
+  gold: 0, gems: 0,
+  level: 1, xp: 0, xpNext: 6,
+  base: { hp: 120, atk: 18, def: 4, spd: 10, crit: 0.10, lifesteal: 0 },
+  bonus:{ hp: 0, atk: 0, def: 0, spd: 0, crit: 0, lifesteal: 0 },
+  haunt: 0, hauntMax: 100,
+  best: 1,
+};
+
+const UPGRADE_POOL = [
+  { id:'atk',  name:'Feral Bite',     desc:'+6 ATK',           apply:g=>g.bonus.atk+=6,  icon:'🦷', rar:'common'},
+  { id:'hp',   name:'Thick Coat',     desc:'+30 Max HP',       apply:g=>g.bonus.hp+=30,  icon:'🧥', rar:'common'},
+  { id:'def',  name:'Iron Paws',      desc:'+3 DEF',           apply:g=>g.bonus.def+=3,  icon:'🐾', rar:'common'},
+  { id:'spd',  name:'Zoomies',        desc:'+4 SPD',           apply:g=>g.bonus.spd+=4,  icon:'💨', rar:'common'},
+  { id:'crit', name:'Wild Eyes',      desc:'+8% Crit',         apply:g=>g.bonus.crit+=0.08, icon:'👁️', rar:'rare'},
+  { id:'ls',   name:'Soul Leech',     desc:'+6% Lifesteal',    apply:g=>g.bonus.lifesteal+=0.06, icon:'🩸', rar:'rare'},
+  { id:'haunt',name:'Restless Spirit',desc:'Haunt builds +40% faster', apply:g=>g.hauntRate=(g.hauntRate||1)*1.4, icon:'👻', rar:'rare'},
+  { id:'demon',name:'Deeper Curse',   desc:'Demon Mode lasts longer & hits harder', apply:g=>{g.demonTurns=(g.demonTurns||5)+2;g.demonMult=(g.demonMult||1.8)+0.3;}, icon:'😈', rar:'epic'},
+];
+
+function stat(g, key){ return g.base[key] + g.bonus[key]; }
+
+/* =====================================================================
+   BOOT SCENE — turn SVGs into textures
+   ===================================================================== */
+class Boot extends Phaser.Scene{
+  constructor(){ super('Boot'); }
+  preload(){
+    const enc = s => 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+    this.load.image('asi',   enc(ASI_NORMAL_SVG));
+    this.load.image('demon', enc(ASI_DEMON_SVG));
+    ENEMY_SVGS.forEach((s,i)=> this.load.image('enemy'+i, enc(s)));
+  }
+  create(){ this.scene.start('Game'); }
+}
+
+/* =====================================================================
+   MAIN GAME SCENE
+   ===================================================================== */
+class Game extends Phaser.Scene{
+  constructor(){ super('Game'); }
+
+  create(){
+    this.W = this.scale.width; this.H = this.scale.height;
+    this.load_save();
+    GAME.hauntRate = GAME.hauntRate || 1;
+    GAME.demonTurns = GAME.demonTurns || 5;
+    GAME.demonMult  = GAME.demonMult  || 1.8;
+
+    this.demon = false; this.demonLeft = 0;
+    this.busy = false; this.modal = false;
+    this.autoBattle = true;
+
+    this.drawBackground();
+    this.buildHUD();
+    this.buildArena();
+    this.buildHauntBar();
+    this.buildControls();
+    this.log('A demon stirs inside Asi... Stage ' + GAME.stage);
+    this.startBattle();
+  }
+
+  /* ---------- persistence ---------- */
+  load_save(){
+    try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)); if(s){ Object.assign(GAME, s); } }catch(e){}
+  }
+  save(){
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(GAME)); }catch(e){}
+  }
+
+  /* ---------- visuals ---------- */
+  drawBackground(){
+    const g=this.add.graphics();
+    g.fillGradientStyle(0x1a1030,0x1a1030,0x0c0a14,0x0c0a14,1);
+    g.fillRect(0,0,this.W,this.H);
+    // stars/embers
+    for(let i=0;i<48;i++){
+      const x=Phaser.Math.Between(0,this.W), y=Phaser.Math.Between(0,this.H*0.55);
+      const d=this.add.circle(x,y,Phaser.Math.Between(1,2),0x9b7bff,Phaser.Math.FloatBetween(.2,.7));
+      this.tweens.add({targets:d,alpha:0.1,yoyo:true,repeat:-1,duration:Phaser.Math.Between(900,2200),delay:i*40});
+    }
+    // ground
+    const gr=this.add.graphics();
+    gr.fillStyle(0x241a3a,1); gr.fillRect(0,this.H*0.66,this.W,this.H*0.34);
+    gr.lineStyle(2,0x3a2a5e,1); gr.strokeRect(0,this.H*0.66,this.W,this.H*0.34);
+  }
+
+  buildHUD(){
+    const pad=14, topY=18;
+    this.add.rectangle(this.W/2, topY+10, this.W-pad*2, 56, 0x000000, .35).setStrokeStyle(1,0x7c3aed,.6);
+    this.txtStage = this.add.text(pad+6, topY-2, '', {fontSize:'15px',fontStyle:'bold',color:'#fff'});
+    this.txtBest  = this.add.text(pad+6, topY+16, '', {fontSize:'11px',color:'#b9a8e8'});
+    this.txtGold  = this.add.text(this.W-pad-6, topY-2, '', {fontSize:'14px',color:'#ffd23d'}).setOrigin(1,0);
+    this.txtGems  = this.add.text(this.W-pad-6, topY+16, '', {fontSize:'13px',color:'#6ee7ff'}).setOrigin(1,0);
+    // level bar
+    const ly=topY+44;
+    this.add.text(pad+6, ly, 'LV', {fontSize:'11px',color:'#caff7a',fontStyle:'bold'});
+    this.xpBg = this.add.rectangle(this.W/2+8, ly+6, this.W-pad*2-40, 10, 0x2a2342).setOrigin(.5);
+    this.xpFill = this.add.rectangle(this.xpBg.x-this.xpBg.width/2, ly+6, 1, 10, 0x8bff5a).setOrigin(0,.5);
+    this.txtLevel = this.add.text(this.W-pad-6, ly-1, '', {fontSize:'11px',color:'#caff7a'}).setOrigin(1,0);
+    this.refreshHUD();
+  }
+
+  refreshHUD(){
+    this.txtStage.setText('STAGE '+GAME.stage + (GAME.stage%10===0?'  ☠ BOSS':''));
+    this.txtBest.setText('Best: '+GAME.best+'   Lv.'+GAME.level);
+    this.txtGold.setText('🪙 '+Math.floor(GAME.gold));
+    this.txtGems.setText('💎 '+GAME.gems);
+    const p=Phaser.Math.Clamp(GAME.xp/GAME.xpNext,0,1);
+    this.xpFill.width = Math.max(1,(this.xpBg.width)*p);
+    this.txtLevel.setText(GAME.xp+'/'+GAME.xpNext);
+  }
+
+  buildArena(){
+    const cy=this.H*0.42;
+    // hero
+    this.heroX=this.W*0.27; this.enemyX=this.W*0.73; this.unitY=cy;
+    this.hero = this.add.image(this.heroX, this.unitY, 'asi').setScale(0.95);
+    this.heroAura = this.add.circle(this.heroX,this.unitY,70,0x7c1fff,0).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({targets:this.hero,y:this.unitY-8,yoyo:true,repeat:-1,duration:1400,ease:'Sine.inOut'});
+    this.hpHero = this.makeBar(this.heroX, cy+78, 0x5aff7a);
+    this.nameHero = this.add.text(this.heroX, cy+92, 'ASI', {fontSize:'12px',color:'#fff',fontStyle:'bold'}).setOrigin(.5);
+    // enemy
+    this.enemy = this.add.image(this.enemyX, this.unitY, 'enemy0').setScale(0.85).setFlipX(true);
+    this.tweens.add({targets:this.enemy,y:this.unitY-6,yoyo:true,repeat:-1,duration:1200,ease:'Sine.inOut'});
+    this.hpEnemy = this.makeBar(this.enemyX, cy+78, 0xff5a6a);
+    this.nameEnemy = this.add.text(this.enemyX, cy+92, '', {fontSize:'12px',color:'#fff'}).setOrigin(.5);
+    // VS
+    this.add.text(this.W/2, cy, 'VS', {fontSize:'18px',color:'#7c3aed',fontStyle:'bold'}).setOrigin(.5);
+    // log line
+    this.logTxt = this.add.text(this.W/2, this.H*0.60, '', {fontSize:'12px',color:'#d8ccff',align:'center',wordWrap:{width:this.W-40}}).setOrigin(.5);
+  }
+
+  makeBar(x,y,color){
+    const w=84,h=9;
+    const bg=this.add.rectangle(x,y,w,h,0x1a1430).setStrokeStyle(1,0x000000,.5);
+    const fill=this.add.rectangle(x-w/2,y,w,h,color).setOrigin(0,.5);
+    const txt=this.add.text(x,y-12,'',{fontSize:'10px',color:'#fff'}).setOrigin(.5);
+    return {bg,fill,txt,w};
+  }
+  setBar(bar,cur,max){
+    const p=Phaser.Math.Clamp(cur/max,0,1);
+    this.tweens.add({targets:bar.fill,width:Math.max(0,bar.w*p),duration:200});
+    bar.txt.setText(Math.max(0,Math.ceil(cur))+' / '+max);
+  }
+
+  buildHauntBar(){
+    const y=this.H*0.66+24, pad=16;
+    this.add.text(pad, y-14, '👻 HAUNT METER', {fontSize:'12px',color:'#c79bff',fontStyle:'bold'});
+    this.hbBg=this.add.rectangle(this.W/2, y+6, this.W-pad*2, 18, 0x1c1530).setStrokeStyle(2,0x7c3aed,.8).setOrigin(.5);
+    this.hbFill=this.add.rectangle(this.W/2-(this.W-pad*2)/2, y+6, 1, 18, 0x9b3bff).setOrigin(0,.5);
+    this.hbFill.setBlendMode(Phaser.BlendModes.ADD);
+    this.unleashBtn=this.makeButton(this.W/2, y+44, this.W-pad*2, 40, 'UNLEASH DEMON', 0x7c1fff, ()=>this.unleashDemon());
+    this.setUnleash(false);
+    this.refreshHaunt();
+  }
+  refreshHaunt(){
+    const p=Phaser.Math.Clamp(GAME.haunt/GAME.hauntMax,0,1);
+    this.hbFill.width=Math.max(1,(this.W-32)*p);
+    const ready = GAME.haunt>=GAME.hauntMax;
+    if(ready && !this.demon) this.setUnleash(true);
+  }
+  setUnleash(on){
+    this.unleashBtn.bg.setFillStyle(on?0x9b1fff:0x3a2a55, 1);
+    this.unleashBtn.txt.setColor(on?'#fff':'#776a99');
+    this.unleashBtn.enabled=on;
+    if(on){ this.tweens.add({targets:this.unleashBtn.bg,scaleX:1.03,scaleY:1.06,yoyo:true,repeat:-1,duration:420}); }
+    else { this.tweens.killTweensOf(this.unleashBtn.bg); this.unleashBtn.bg.setScale(1); }
+  }
+
+  buildControls(){
+    const y=this.H-34;
+    this.autoBtn=this.makeButton(this.W*0.26, y, this.W*0.42, 38, 'AUTO: ON', 0x2f6b4a, ()=>{
+      this.autoBattle=!this.autoBattle;
+      this.autoBtn.txt.setText('AUTO: '+(this.autoBattle?'ON':'OFF'));
+      this.autoBtn.bg.setFillStyle(this.autoBattle?0x2f6b4a:0x6b2f3a,1);
+      if(this.autoBattle && !this.busy && !this.modal) this.tickBattle();
+    });
+    this.resetBtn=this.makeButton(this.W*0.74, y, this.W*0.42, 38, 'RESET RUN', 0x5a3a6b, ()=>this.confirmReset());
+  }
+
+  makeButton(x,y,w,h,label,color,cb){
+    const bg=this.add.rectangle(x,y,w,h,color,1).setStrokeStyle(2,0xffffff,.12).setInteractive({useHandCursor:true});
+    const txt=this.add.text(x,y,label,{fontSize:'14px',fontStyle:'bold',color:'#fff'}).setOrigin(.5);
+    const o={bg,txt,enabled:true};
+    bg.on('pointerdown',()=>{ if(o.enabled!==false){ this.tweens.add({targets:bg,scaleX:0.95,scaleY:0.9,yoyo:true,duration:80}); cb(); } });
+    return o;
+  }
+
+  log(s){ this.logTxt.setText(s); }
+
+  /* ---------- battle setup ---------- */
+  startBattle(){
+    const isBoss = GAME.stage%10===0;
+    const t = (GAME.stage-1)*0.16;
+    this.heroHP = stat(GAME,'hp'); this.heroMax=this.heroHP;
+    const eHpBase = 70 + GAME.stage*22 + (isBoss?GAME.stage*40:0);
+    this.enemyMax = Math.round(eHpBase*(1+t));
+    this.enemyHP = this.enemyMax;
+    this.eAtk = Math.round((10+GAME.stage*2.4)*(isBoss?1.5:1));
+    this.eDef = Math.round(2+GAME.stage*0.7);
+    this.eSpd = 8+Math.floor(GAME.stage*0.3);
+    this.isBoss=isBoss;
+    const tier = Math.min(2, Math.floor((GAME.stage-1)/6));
+    this.enemy.setTexture('enemy'+ (isBoss?2:tier));
+    this.enemy.setScale(isBoss?1.15:0.85);
+    this.nameEnemy.setText(isBoss?'☠ CURSED ALPHA':['Marsh Cur','Wraith Pup','Hell Hound'][isBoss?2:tier]);
+    this.setBar(this.hpHero,this.heroHP,this.heroMax);
+    this.setBar(this.hpEnemy,this.enemyHP,this.enemyMax);
+    this.refreshHUD();
+    this.busy=false;
+    if(this.autoBattle) this.time.delayedCall(500,()=>this.tickBattle());
+  }
+
+  tickBattle(){
+    if(this.busy||this.modal) return;
+    if(this.heroHP<=0||this.enemyHP<=0) return;
+    this.busy=true;
+    // hero strikes
+    this.strike(true, ()=>{
+      if(this.enemyHP<=0){ this.busy=false; return this.win(); }
+      // enemy strikes
+      this.time.delayedCall(260,()=>{
+        this.strike(false, ()=>{
+          if(this.heroHP<=0){ this.busy=false; return this.lose(); }
+          this.busy=false;
+          this.tickDemon();
+          if(this.autoBattle) this.time.delayedCall(360,()=>this.tickBattle());
+        });
+      });
+    });
+  }
+
+  strike(heroAtt, done){
+    const atkr = heroAtt? this.hero:this.enemy;
+    const dx = heroAtt? 26:-26;
+    let dmg, crit=false;
+    if(heroAtt){
+      let a=stat(GAME,'atk');
+      if(this.demon) a*=GAME.demonMult;
+      crit = Math.random() < (stat(GAME,'crit'));
+      dmg = Math.max(1, Math.round((a-(this.eDef))*(crit?1.8:1)*Phaser.Math.FloatBetween(0.9,1.1)));
+      this.enemyHP-=dmg;
+      const ls = stat(GAME,'lifesteal') + (this.demon?0.12:0);
+      if(ls>0){ const heal=Math.round(dmg*ls); this.heroHP=Math.min(this.heroMax,this.heroHP+heal); }
+      this.addHaunt(this.demon?2:6*GAME.hauntRate);
+      this.setBar(this.hpEnemy,this.enemyHP,this.enemyMax);
+      this.setBar(this.hpHero,this.heroHP,this.heroMax);
+    } else {
+      const def=stat(GAME,'def');
+      dmg=Math.max(1, Math.round((this.eAtk-def)*Phaser.Math.FloatBetween(0.9,1.1)));
+      this.heroHP-=dmg;
+      this.addHaunt(8*GAME.hauntRate); // taking hits feeds the demon
+      this.setBar(this.hpHero,this.heroHP,this.heroMax);
+    }
+    // lunge anim
+    this.tweens.add({targets:atkr,x:atkr.x+dx,duration:110,yoyo:true,ease:'Quad.in',
+      onYoyo:()=>{ this.flash(heroAtt?this.enemy:this.hero); this.floatDmg(heroAtt?this.enemyX:this.heroX, this.unitY-30, dmg, crit, heroAtt); }});
+    this.time.delayedCall(240, done);
+  }
+
+  flash(t){ const c=t.tintTopLeft; t.setTint(0xffffff); this.time.delayedCall(90,()=>t.clearTint());
+    this.tweens.add({targets:t,scaleX:t.scaleX*0.92,yoyo:true,duration:90}); }
+
+  floatDmg(x,y,dmg,crit,hero){
+    const col = hero? (crit?'#ffd23d':'#ffffff') : '#ff7a8a';
+    const t=this.add.text(x+Phaser.Math.Between(-12,12),y,(crit?'CRIT ':'')+dmg,{fontSize:crit?'22px':'17px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:3}).setOrigin(.5);
+    this.tweens.add({targets:t,y:y-44,alpha:0,duration:680,onComplete:()=>t.destroy()});
+  }
+
+  /* ---------- haunt / demon ---------- */
+  addHaunt(n){
+    if(this.demon) return;
+    GAME.haunt=Math.min(GAME.hauntMax,GAME.haunt+n);
+    this.refreshHaunt();
+  }
+
+  unleashDemon(){
+    if(this.unleashBtn.enabled===false) return;
+    if(GAME.haunt<GAME.hauntMax||this.demon) return;
+    this.demon=true; this.demonLeft=GAME.demonTurns; GAME.haunt=0;
+    this.refreshHaunt(); this.setUnleash(false);
+    // transform fx
+    this.cameras.main.shake(260,0.008);
+    this.cameras.main.flash(200,140,40,255);
+    this.hero.setTexture('demon');
+    this.tweens.add({targets:this.heroAura,fillAlpha:0.5,scale:1.2,yoyo:true,repeat:-1,duration:700});
+    this.hero.setScale(1.1);
+    this.log('😈 DEMON MODE! Asi is consumed by the curse — '+GAME.demonTurns+' turns of fury!');
+    if(this.autoBattle && !this.busy && !this.modal) this.time.delayedCall(300,()=>this.tickBattle());
+  }
+
+  tickDemon(){
+    if(!this.demon) return;
+    this.demonLeft--;
+    if(this.demonLeft<=0){
+      this.demon=false;
+      this.hero.setTexture('asi'); this.hero.setScale(0.95);
+      this.tweens.killTweensOf(this.heroAura); this.heroAura.setAlpha(0).setScale(1);
+      this.log('The curse recedes... Asi returns to himself.');
+    }
+  }
+
+  /* ---------- outcomes ---------- */
+  win(){
+    const isBoss=this.isBoss;
+    const gold = Math.round((12+GAME.stage*5)*(isBoss?3:1));
+    const xp   = Math.round(3+GAME.stage*1.6);
+    GAME.gold+=gold; GAME.xp+=xp;
+    if(isBoss) GAME.gems+=5;
+    this.floatReward('+'+gold+' 🪙', this.enemyX, this.unitY-10, '#ffd23d');
+    // level ups
+    let leveled=false;
+    while(GAME.xp>=GAME.xpNext){ GAME.xp-=GAME.xpNext; GAME.level++; GAME.xpNext=Math.round(GAME.xpNext*1.35+2); leveled=true; }
+    GAME.stage++; GAME.best=Math.max(GAME.best,GAME.stage);
+    this.save(); this.refreshHUD();
+
+    // gear drop chance / event every 4 stages, else next battle
+    const eventStage = (GAME.stage-1)%4===0;
+    this.time.delayedCall(650,()=>{
+      if(leveled){ this.offerUpgrade(()=>this.afterWin(eventStage)); }
+      else this.afterWin(eventStage);
+    });
+  }
+  afterWin(eventStage){
+    if(eventStage){ this.offerEvent(()=>this.startBattle()); }
+    else this.startBattle();
+  }
+
+  floatReward(s,x,y,col){
+    const t=this.add.text(x,y,s,{fontSize:'18px',fontStyle:'bold',color:col,stroke:'#000',strokeThickness:3}).setOrigin(.5);
+    this.tweens.add({targets:t,y:y-50,alpha:0,duration:1000,onComplete:()=>t.destroy()});
+  }
+
+  lose(){
+    this.demon=false; this.hero.setTexture('asi').setScale(0.95);
+    this.tweens.killTweensOf(this.heroAura); this.heroAura.setAlpha(0);
+    // soft fail: keep gold/level, retreat 1 stage, refill
+    GAME.stage=Math.max(1,GAME.stage-1);
+    this.save();
+    this.showModal('DEFEAT', 'Asi was overwhelmed at Stage '+(GAME.stage+1)+'.\nYou keep your gold & upgrades.\nRetreat and try again from Stage '+GAME.stage+'.',
+      [{label:'Try Again', color:0x2f6b4a, cb:()=>{ this.closeModal(); this.startBattle(); }}]);
+  }
+
+  /* ---------- rogue-lite upgrade pick ---------- */
+  offerUpgrade(done){
+    this.modal=true;
+    const pick = Phaser.Utils.Array.Shuffle(UPGRADE_POOL.slice()).slice(0,3);
+    const overlay=this.add.rectangle(this.W/2,this.H/2,this.W,this.H,0x000000,.72).setInteractive();
+    const title=this.add.text(this.W/2,this.H*0.20,'LEVEL '+GAME.level+'!\nChoose a Power',{fontSize:'22px',fontStyle:'bold',color:'#caff7a',align:'center'}).setOrigin(.5);
+    const cards=[];
+    pick.forEach((u,i)=>{
+      const y=this.H*0.34 + i*(this.H*0.16);
+      const col = u.rar==='epic'?0x6a1fb0 : u.rar==='rare'?0x2a4a7a : 0x2c2c44;
+      const card=this.add.rectangle(this.W/2,y,this.W-56,this.H*0.13,col,1).setStrokeStyle(2, u.rar==='epic'?0xff9b3d:u.rar==='rare'?0x6ee7ff:0x888,1).setInteractive({useHandCursor:true});
+      const ic=this.add.text(this.W/2-(this.W-56)/2+30,y,u.icon,{fontSize:'30px'}).setOrigin(.5);
+      const nm=this.add.text(this.W/2-30,y-14,u.name,{fontSize:'17px',fontStyle:'bold',color:'#fff'}).setOrigin(0,.5);
+      const ds=this.add.text(this.W/2-30,y+12,u.desc,{fontSize:'13px',color:'#d8ccff'}).setOrigin(0,.5);
+      const rr=this.add.text(this.W/2+(this.W-56)/2-14,y,u.rar.toUpperCase(),{fontSize:'10px',color:'#ffd',fontStyle:'bold'}).setOrigin(1,.5);
+      const all=[card,ic,nm,ds,rr]; cards.push(...all,title,overlay);
+      card.on('pointerdown',()=>{
+        u.apply(GAME);
+        if(this.heroMax) { this.heroMax=stat(GAME,'hp'); }
+        this.save();
+        cards.forEach(o=>o.destroy());
+        this.modal=false; this.refreshHUD(); done();
+      });
+    });
+  }
+
+  /* ---------- adventure event (Capybara-style choice) ---------- */
+  offerEvent(done){
+    this.modal=true;
+    const events=[
+      { t:'A Haunted Shrine', d:'Asi sniffs a glowing shrine. Offer your spirit?',
+        opts:[ {l:'Pray (+40 Max HP)',cb:g=>g.bonus.hp+=40},
+               {l:'Smash it (+80 🪙)',cb:g=>g.gold+=80} ]},
+      { t:'Stray Bones', d:'A pile of cursed bones. They whisper to the demon.',
+        opts:[ {l:'Devour (+5 ATK)',cb:g=>g.bonus.atk+=5},
+               {l:'Channel (Haunt +50)',cb:g=>g.haunt=Math.min(g.hauntMax,g.haunt+50)} ]},
+      { t:'Wandering Merchant', d:'"Trade me 💎 for power, little hound."',
+        opts:[ {l:'Buy charm (+3% Crit)',cb:g=>g.bonus.crit+=0.03},
+               {l:'Walk away (+30 🪙)',cb:g=>g.gold+=30} ]},
+    ];
+    const ev=Phaser.Utils.Array.GetRandom(events);
+    const overlay=this.add.rectangle(this.W/2,this.H/2,this.W,this.H,0x000000,.72).setInteractive();
+    const objs=[overlay];
+    objs.push(this.add.text(this.W/2,this.H*0.26,'✦ '+ev.t+' ✦',{fontSize:'20px',fontStyle:'bold',color:'#c79bff'}).setOrigin(.5));
+    objs.push(this.add.text(this.W/2,this.H*0.34,ev.d,{fontSize:'14px',color:'#e6dcff',align:'center',wordWrap:{width:this.W-70}}).setOrigin(.5));
+    ev.opts.forEach((o,i)=>{
+      const y=this.H*0.46+i*(this.H*0.11);
+      const b=this.add.rectangle(this.W/2,y,this.W-70,this.H*0.085,0x3a2a66,1).setStrokeStyle(2,0x7c3aed,1).setInteractive({useHandCursor:true});
+      const t=this.add.text(this.W/2,y,o.l,{fontSize:'15px',fontStyle:'bold',color:'#fff'}).setOrigin(.5);
+      objs.push(b,t);
+      b.on('pointerdown',()=>{ o.cb(GAME); this.heroMax=stat(GAME,'hp'); this.save(); objs.forEach(x=>x.destroy()); this.modal=false; this.refreshHaunt(); this.refreshHUD(); done(); });
+    });
+  }
+
+  /* ---------- generic modal ---------- */
+  showModal(title,body,buttons){
+    this.modal=true;
+    const objs=[];
+    objs.push(this.add.rectangle(this.W/2,this.H/2,this.W,this.H,0x000000,.78).setInteractive());
+    objs.push(this.add.text(this.W/2,this.H*0.34,title,{fontSize:'28px',fontStyle:'bold',color:'#ff6a7a'}).setOrigin(.5));
+    objs.push(this.add.text(this.W/2,this.H*0.45,body,{fontSize:'14px',color:'#e6dcff',align:'center',wordWrap:{width:this.W-70}}).setOrigin(.5));
+    buttons.forEach((bt,i)=>{
+      const y=this.H*0.58+i*70;
+      const b=this.add.rectangle(this.W/2,y,this.W-90,46,bt.color,1).setStrokeStyle(2,0xffffff,.15).setInteractive({useHandCursor:true});
+      const t=this.add.text(this.W/2,y,bt.label,{fontSize:'16px',fontStyle:'bold',color:'#fff'}).setOrigin(.5);
+      objs.push(b,t); b.on('pointerdown',bt.cb);
+    });
+    this._modalObjs=objs;
+  }
+  closeModal(){ (this._modalObjs||[]).forEach(o=>o.destroy()); this._modalObjs=[]; this.modal=false; }
+
+  confirmReset(){
+    this.showModal('Reset Run?','This wipes stage, level, gold & upgrades back to the start.',[
+      {label:'Yes, reset', color:0x6b2f3a, cb:()=>{
+        localStorage.removeItem(SAVE_KEY);
+        Object.assign(GAME,{stage:1,gold:0,gems:0,level:1,xp:0,xpNext:6,
+          bonus:{hp:0,atk:0,def:0,spd:0,crit:0,lifesteal:0},haunt:0,best:1,hauntRate:1,demonTurns:5,demonMult:1.8});
+        this.closeModal(); this.scene.restart();
+      }},
+      {label:'Cancel', color:0x3a3a55, cb:()=>this.closeModal()},
+    ]);
+  }
+}
+
+/* ---------- launch ---------- */
+new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'game',
+  backgroundColor:'#0c0a14',
+  scale:{ mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 480, height: 1040 },
+  scene:[Boot,Game],
+});
+</script>
+</body>
+</html>
