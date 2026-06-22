@@ -93,13 +93,13 @@ html,body{margin:0;height:100%;background:#04030a;overflow:hidden;font-family:-a
 #rHero{left:8%;transition:left .9s cubic-bezier(.4,0,.3,1);}
 #rEnemy{right:8%;}
 #rHero.walking svg{animation:none;}
-#rHero.dash{animation:herodash .34s cubic-bezier(.45,0,.2,1);}
+#rHero.dash{animation:herodash .66s cubic-bezier(.4,0,.25,1);}
 @keyframes herodash{0%{transform:translateX(0)}45%{transform:translateX(150px);filter:brightness(1.4)}100%{transform:translateX(0)}}
 #rHero.bob svg,#rEnemy.bob svg{animation:rbob 1.6s ease-in-out infinite;}
 @keyframes rbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 #rEnemy.recoil{animation:erecoil .3s ease;}@keyframes erecoil{30%{transform:translateX(22px) rotate(7deg);filter:brightness(2.6)}}
 #rEnemy.elunge{animation:elunge .32s ease;}@keyframes elunge{42%{transform:translateX(-150px)}}
-#rHero.walkfwd{animation:walkfwd .32s ease-in-out infinite;}@keyframes walkfwd{0%,100%{transform:translate(0,0) rotate(-3deg)}50%{transform:translate(9px,-8px) rotate(3deg)}}
+#rHero.walkfwd{animation:walkfwd .32s ease-in-out infinite;}@keyframes walkfwd{0%,100%{transform:translate(0,0)}50%{transform:translate(0,-7px)}}
 #rHero.recoil{animation:hrecoil .3s ease;}@keyframes hrecoil{30%{transform:translateX(-16px) rotate(-5deg);filter:brightness(2.4)}}
 .speedlines{position:absolute;top:64%;left:0;width:58%;height:20%;pointer-events:none;opacity:0;
   background:repeating-linear-gradient(90deg,transparent 0 14px,#ffffff44 14px 17px);mix-blend-mode:screen;}
@@ -694,7 +694,7 @@ function sVictory(){_arp([523,659,784,1047,1319],0.09,0.11,"triangle");_tone(156
 function sBoss(){_arp([392,523,659,784,1047,1319,1568],0.10,0.12,"sawtooth");}
 function sFail(){const t=_now();_sweep(440,110,t,0.7,"sawtooth",0.10);[349,277,220].forEach((f,k)=>_tone(f,t+k*0.18,0.3,"triangle",0.08));}
 /* ===== RUN ENGINE ===== */
-var ASIANIM={idle:["asi_idle",6,4,true],walk:["asi_walk",12,9,true],attack:["asi_attack",6,3,false],hidle:["asih_idle",6,4,true],hwalk:["asih_walk",12,9,true],hattack:["asih_attack",5,3,false]};
+var ASIANIM={idle:["asi_idle",6,4,true],walk:["asi_walk",12,16,true],attack:["asi_attack",6,9,false],hidle:["asih_idle",6,4,true],hwalk:["asih_walk",12,16,true],hattack:["asih_attack",5,9,false]};
 var _asiCur={},_asiLock=false;
 function playAsi(containerId,anim,scale,onEnd){var cont=$(containerId);if(!cont)return;var a=ASIANIM[anim]||ASIANIM.idle;var spId=containerId+"_asi";var sp=document.getElementById(spId);if(a[3]&&_asiCur[containerId]===anim&&sp&&sp._iv)return;
  if(!sp||cont.getAttribute("data-asi")!=="1"){cont.innerHTML='<div class="asisprite" id="'+spId+'"></div>';cont.setAttribute("data-asi","1");sp=document.getElementById(spId);}
@@ -731,7 +731,7 @@ function enterChapter(){actx();R.active=true;R.chapter=G.chapter;R.node=1;R.skil
 function startEncounter(){const e=enemyForNode(R.chapter,R.node);R.curEnemy=e;R.boss=!!e.boss;
   const base=R.chapter*10+R.node*6;R.enemyMax=Math.round((45+base*4.5+(R.boss?base*12:0)));R.enemy=R.enemyMax;
   R.eAtk=Math.round((7+(R.chapter*2.2+R.node)*1.45)*(R.boss?1.8:1));R.eDef=Math.round(2+R.chapter*1.25+R.node*0.4);
-  R.demon=(R.demonCombats||0)>0;R.demonLeft=0;R.encId=(R.encId||0)+1;R.firstHit=true;R.status={burnS:0,burnT:0,poiS:0,poiT:0,freeze:0};R.turn=0;R.lastStandUsed=0;
+  R.demon=(R.demonCombats||0)>0;R.demonLeft=0;R.encId=(R.encId||0)+1;_asiLock=false;R.firstHit=true;R.status={burnS:0,burnT:0,poiS:0,poiT:0,freeze:0};R.turn=0;R.lastStandUsed=0;
   try{if(R.demon){$("rAura").style.setProperty("--aura",hauntedVariant(curSkin()).aura);$("rAura").classList.add("on");}else{$("rAura").classList.remove("on");}}catch(e){}try{setPose("idle");}catch(e){showErr("setPose",e);}try{setEnemyArt(e);}catch(e){showErr("setEnemyArt",e);}try{$("rEnemy").style.opacity="1";$("rEnemyNP").style.opacity="1";$("rEnemyShadow").style.opacity="1";updateStatusUI();renderTrack();renderRunBars();renderHaunt();renderPanel();
   $("rEnemyName").textContent=(e.boss?"☠ ":"")+e.n;$("rHeroName").textContent=curSkin().name==="Asi"?"Asi":"Asi";
   }catch(e){showErr("startEncounter-render",e);}log(R.boss?"⚠ "+e.n+" — BOSS!":e.n+" appears!");if(R.boss){camShake(true);floatCO("⚠ BOSS ⚠","#ff3b46");}R.running=true;schedule(750);}
@@ -775,7 +775,7 @@ function heroStrike(done){const st=computeStats();let a=st.atk;if(R.demon)a*=unl
     if((G.talents.doubletap||0)>0&&Math.random()<(G.talents.doubletap*0.05)){var _dt=R.encId;setTimeout(function(){if(!R.active||R.encId!==_dt)return;var d2=dmgToEnemy((computeStats().atk*(R.demon?unleashMult():1)-R.eDef)*rand(.9,1.1));R.enemy-=d2;vfxSlash("enemy","#caff7a");floatText("enemy",d2,{color:"#caff7a"});floatCO("DOUBLE!","#caff7a");renderRunBars();if(R.enemy<=0&&R.running){R.running=false;encounterWin();}},220);}
     setTimeout(function(){if(done)done();},Math.max(140,delay-160));
   },440/R.speed);
-  setTimeout(()=>{$("rHero").classList.remove("dash");$("rSpeed").classList.remove("go");if(R.hp>0)setPose("idle");},700/R.speed);}
+  setTimeout(()=>{$("rHero").classList.remove("dash");$("rSpeed").classList.remove("go");if(R.hp>0)setPose("idle");},880/R.speed);}
 function enemyStrike(done){const st=computeStats();var _en=1+Math.max(0,(R.turn||0)-6)*0.06;if(R.turn===7)floatCO("\uD83D\uDD25 ENRAGED!","#ff5a4a");let raw=R.eAtk*_en*rand(.9,1.1);raw*=1-affix().dr;const dmg=Math.max(Math.round(raw*0.28),Math.round(raw-st.def*0.55));
   $("rEnemy").classList.add("elunge");enemyAttackAnim();
   setTimeout(()=>{R.hp-=dmg;var _t=((R.skills&&R.skills.thorns)||0)+affix().thorns+(G.talents.thorns||0)*0.08;if(_t>0){var _rf=Math.round(dmg*_t);R.enemy-=_rf;floatText("enemy",_rf,{color:"#caff7a",small:true});}if(R.hp<=0&&(G.talents.laststand||0)>(R.lastStandUsed||0)){R.hp=1;R.lastStandUsed=(R.lastStandUsed||0)+1;floatCO("LAST STAND!","#ffd23d");}setPose("hit");$("rHero").classList.add("recoil");camShake(false);vfxSlash("hero","#ff6a6a");floatText("hero",dmg,{color:"#ff8a96"});renderRunBars();
@@ -1067,7 +1067,7 @@ function talCost(n,lv){return Math.round(n.cost(lv)*2.2);}
 function buyTalent(n){var lv=G.talents[n.id]||0;if(lv>=n.max){toast("Maxed");return;}if(!talUnlocked(n)){toast("Locked");return;}var cost=talCost(n,lv);if(G.bones<cost){toast("Need 🦴 "+cost);return;}G.bones-=cost;G.talents[n.id]=lv+1;save();renderHomeHUD();renderTalents();toast(n.n+" → Lv "+(lv+1),"gold");}
 function renderTalents(){var _th=$("talHdr");if(_th){var _ow=0,_tt=TREE.length,_lv=0;TREE.forEach(function(n){if((G.talents[n.id]||0)>0)_ow++;_lv+=(G.talents[n.id]||0);});_th.innerHTML='<span>🌳 Nodes <b style="color:#caff7a">'+_ow+'/'+_tt+'</b>  ·  Levels <b style="color:#7af0ff">'+_lv+'</b></span><span>🦴 <b style="color:#e7dcc4">'+G.bones+'</b> bones</span>';}var c=$("talList");if(!c)return;var rowH=94,padTop=34,maxRow=0;TREE.forEach(function(n){if(n.y>maxRow)maxRow=n.y;});var H=padTop+(maxRow+1)*rowH+10;
  var lines="";TREE.forEach(function(n){if(!n.pre)return;var pn=talFind(n.pre[0]);if(!pn)return;var active=(G.talents[pn.id]||0)>=n.pre[1];lines+='<line x1="'+pn.x+'%" y1="'+(padTop+pn.y*rowH+27)+'" x2="'+n.x+'%" y2="'+(padTop+n.y*rowH+27)+'" stroke="'+(active?"#8b46ff":"#2c2350")+'" stroke-width="3" stroke-dasharray="'+(active?"0":"5 4")+'"/>';});
- var nodes="";TREE.forEach(function(n){var lv=G.talents[n.id]||0,unlocked=talUnlocked(n),maxed=lv>=n.max;var cls="treenode"+(unlocked?"":" locked")+(lv>0?" owned":"")+(maxed?" maxed":"");nodes+='<div class="'+cls+'" data-id="'+n.id+'" style="left:'+n.x+'%;top:'+(padTop+n.y*rowH)+'px"><div class="tnic">'+n.ic+'</div><div class="tnlv">'+lv+"/"+n.max+'</div></div>';});
+ var nodes="";TREE.forEach(function(n){var lv=G.talents[n.id]||0,unlocked=talUnlocked(n),maxed=lv>=n.max;var cls="treenode"+(unlocked?"":" locked")+(lv>0?" owned":"")+(maxed?" maxed":"");var _need=talRowLevel(n.y||0);var _lvtxt=unlocked?(lv+"/"+n.max):("🔒 Lv"+_need);nodes+='<div class="'+cls+'" data-id="'+n.id+'" style="left:'+n.x+'%;top:'+(padTop+n.y*rowH)+'px"><div class="tnic">'+n.ic+'</div><div class="tnlv"'+(unlocked?'':' style="color:#ff9aa6;font-size:9px"')+'>'+_lvtxt+'</div></div>';});
  c.style.position="relative";c.style.height=H+"px";var _cols=[[10,"PRECISION","#ff8a96"],[30,"MIGHT","#ffd23d"],[50,"CURSE","#c77bff"],[70,"GUARD","#7af0ff"],[90,"FORTUNE","#caff7a"]];var _labels=_cols.map(function(cc){return '<div style="position:absolute;left:'+cc[0]+'%;top:4px;transform:translateX(-50%);font-size:9px;font-weight:900;letter-spacing:.5px;color:'+cc[2]+';opacity:.9;white-space:nowrap;text-shadow:0 1px 2px #000">'+cc[1]+'</div>';}).join("");c.innerHTML='<svg style="position:absolute;left:0;top:0;width:100%;height:'+H+'px;pointer-events:none">'+lines+'</svg>'+_labels+nodes;
  c.querySelectorAll(".treenode").forEach(function(d){d.onclick=function(){showTalNode(talFind(d.dataset.id));};});}
 function showTalNode(n){var lv=G.talents[n.id]||0,unlocked=talUnlocked(n),maxed=lv>=n.max,cost=talCost(n,lv),preN=n.pre?talFind(n.pre[0]):null;
