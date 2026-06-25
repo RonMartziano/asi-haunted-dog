@@ -611,6 +611,12 @@ const AFFIXES=[
  {id:"soulreaver",n:"Soul Reaver",d:"+14% Lifesteal",k:"lifesteal",v:.14,tier:"legendary"},
  {id:"warlord",n:"Warlord",d:"+28% ATK",k:"atkpct",v:.28,tier:"legendary"},
  {id:"executioner",n:"Executioner",d:"+45% dmg vs foes below 30% HP",k:"exec",v:.45,tier:"legendary"},
+ {id:"frostlord",n:"Frost Lord",d:"+22% Freeze chance",k:"freeze",v:.22,tier:"legendary"},
+ {id:"venomlord",n:"Venom Lord",d:"+26% Poison chance",k:"poison",v:.26,tier:"legendary"},
+ {id:"titanstrike",n:"Titan Strike",d:"+32% ATK",k:"atkpct",v:.32,tier:"legendary"},
+ {id:"reaper",n:"Reaper",d:"+55% dmg vs foes below 30% HP",k:"exec",v:.55,tier:"legendary"},
+ {id:"titanblood",n:"Titan\u2019s Blood",d:"+25% Max HP & +12% Lifesteal",k:"hppct",v:.25,k2:"lifesteal",v2:.12,tier:"legendary"},
+ {id:"stormlord",n:"Storm Lord",d:"+18% Lightning \u00B7 crits chain lightning",k:"light",v:.18,tier:"legendary"},
  {id:"apocalypse",n:"Apocalypse",d:"+6% all procs · every 6th hit drops a Meteor",k:"allproc",v:.06,tier:"mythic"},
  {id:"worldeater",n:"World Eater",d:"+12% ATK · each kill heals 15% HP & +3 ATK (run)",k:"atkpct",v:.12,tier:"mythic"},
  {id:"demonheart",n:"Demon Heart",d:"+35% Unleash dmg · Unleash lasts +1 combat",k:"formdmg",v:.35,tier:"mythic"},
@@ -683,7 +689,8 @@ function hauntRate(){return (1+((R.skills&&R.skills.hauntRate)||0))*(1+G.talents
 function unleashMult(){return UNLEASH.mult*(1+G.talents.demon*0.08)*(1+(G.talents.demonking||0)*0.10)*(1+affix().formdmg);}
 function synP(){return (R.skills&&R.skills.pyro)||0;}function synA(){return (R.skills&&R.skills.alch)||0;}function synG(){return (R.skills&&R.skills.glac)||0;}
 /* ===== GEAR GEN ===== */
-function rollRarity(boost){boost=boost||0;var base={common:54,rare:28,epic:8};var e=Object.entries(base).map(function(kv){return [kv[0],kv[1]+(kv[0]!=="common"?boost:0)];});var tot=e.reduce(function(a,kv){return a+kv[1];},0),r=Math.random()*tot;for(var i=0;i<e.length;i++){if((r-=e[i][1])<0)return e[i][0];}return"common";}
+function epicUnlocked(){return (G.heroLevel||1)>=7||((G.stats&&G.stats.maxChapter)||0)>=8||(G.chapter||1)>=8;}
+function rollRarity(boost){boost=boost||0;var base=epicUnlocked()?{common:54,rare:28,epic:8}:{common:62,rare:30};var e=Object.entries(base).map(function(kv){return [kv[0],kv[1]+(kv[0]!=="common"?boost:0)];});var tot=e.reduce(function(a,kv){return a+kv[1];},0),r=Math.random()*tot;for(var i=0;i<e.length;i++){if((r-=e[i][1])<0)return e[i][0];}return"common";}
 const LEGENDARIES=[
  {slot:"collar",n:"Fang of the Moon",ic:"🌙",affix:"vampiric"},
  {slot:"collar",n:"Eternal Choker",ic:"♾️",affix:"bulwark"},
@@ -814,6 +821,7 @@ function heroStrike(done){var _eid=R.encId;const st=computeStats();let a=st.atk;
     if(Math.random()<onHit("phantom")){procStrike("phantom",Math.round(a*0.6),1,delay);if(R.hp<R.hpMax)R.hp=Math.min(R.hpMax,R.hp+Math.round(a*0.3));delay+=1500;}
     if(hasAffix("apocalypse")){R.apoc=(R.apoc||0)+1;if(R.apoc%6===0){floatCO("☄️ APOCALYPSE!","#ff5a3d");procStrike("meteor",Math.round(a*1.7),1,delay);delay+=1500;}}
     if(crit&&hasAffix("cataclysmcore")){procStrike("meteor",Math.round(a*1.0),1,delay);delay+=1500;}
+    if(crit&&hasAffix("stormlord")){procStrike("light",Math.round(a*0.5),2,delay);delay+=1500;}
     if((G.talents.doubletap||0)>0&&Math.random()<(G.talents.doubletap*0.05)){var _dt=R.encId;setTimeout(function(){if(!R.active||!R.running||R.encId!==_dt||R.enemy<=0)return;var d2=dmgToEnemy((computeStats().atk*(R.demon?unleashMult():1)-R.eDef)*rand(.9,1.1));R.enemy-=d2;vfxSlash("enemy","#caff7a");floatText("enemy",d2,{color:"#caff7a"});floatCO("DOUBLE!","#caff7a");renderRunBars();if(R.enemy<=0&&R.running){R.running=false;encounterWin();}},220);}
     setTimeout(function(){if(R.encId!==_eid)return;if(done)done();},Math.max(140,delay-160));
   },440/R.speed);
@@ -822,10 +830,7 @@ function enemyStrike(done){const st=computeStats();var _en=1+Math.max(0,(R.turn|
   $("rEnemy").classList.add("elunge");enemyAttackAnim();
   setTimeout(()=>{R.hp-=dmg;try{var _hf=$("hurtFlash");if(_hf){_hf.classList.remove("on");void _hf.offsetWidth;_hf.classList.add("on");setTimeout(function(){_hf.classList.remove("on");},360);}}catch(e){}var _t=((R.skills&&R.skills.thorns)||0)+affix().thorns+(G.talents.thorns||0)*0.08;if(_t>0){var _rf=Math.round(dmg*_t);R.enemy-=_rf;floatText("enemy",_rf,{color:"#caff7a",small:true});}if(R.hp<=0&&(G.talents.laststand||0)>(R.lastStandUsed||0)){R.hp=1;R.lastStandUsed=(R.lastStandUsed||0)+1;floatCO("LAST STAND!","#ffd23d");}setPose("hit");$("rHero").classList.add("recoil");camShake(false);vfxSlash("hero","#ff6a6a");floatText("hero",dmg,{color:"#ff8a96"});renderRunBars();
     setTimeout(()=>{$("rHero").classList.remove("recoil");$("rEnemy").classList.remove("elunge");if(R.hp>0)setPose("idle");if(done)done();},320/R.speed);},240/R.speed);}
-function procStrike(type,perHit,hits,delay){var _eid=R.encId;for(let i=0;i<hits;i++){((d,idx)=>setTimeout(()=>{if(!R.active||!R.running||R.encId!==_eid||R.enemy<=0)return;if(idx===0&&PROCLABEL[type])floatCO(PROCLABEL[type],PROCCOLOR[type]||"#fff");const dmg=dmgToEnemy(perHit);R.enemy-=dmg;
-  procVFX(type);if(typeof sProc==="function")sProc(type);floatText("enemy",dmg,{color:PROCCOLOR[type],small:true});renderRunBars();
-  if(type==="light"&&Math.random()<0.25)applyFreeze(1);
-  if(R.enemy<=0&&R.running){R.running=false;encounterWin();}},d+i*300))(delay,i);}}
+function procStrike(type,perHit,hits,delay){var _eid=R.encId;for(let i=0;i<hits;i++){((d,idx)=>setTimeout(()=>{if(!R.active||!R.running||R.encId!==_eid||R.enemy<=0)return;if(idx===0&&PROCLABEL[type])floatCO(PROCLABEL[type],PROCCOLOR[type]||"#fff");procVFX(type);if(typeof sProc==="function")sProc(type);var _imp=(type==="meteor"?1150:type==="light"?520:0);setTimeout(function(){if(R.encId!==_eid||!R.running||R.enemy<=0)return;const dmg=dmgToEnemy(perHit);R.enemy-=dmg;floatText("enemy",dmg,{color:PROCCOLOR[type],small:true});renderRunBars();if(type==="light"&&Math.random()<0.25)applyFreeze(1);if(R.enemy<=0&&R.running){R.running=false;encounterWin();}},_imp);},d+i*300))(delay,i);}}
 /* status */
 function tickDoT(){if(R.status.burnS>0){const dmg=Math.max(1,Math.round(R.status.burnS*(0.18*(1+synP()*0.30+(G.talents.emberlord||0)*0.15))*(synActive("burn","poison")?1.35:1)*computeStats().atk));R.enemy-=dmg;floatText("enemy","🔥 "+dmg,{color:"#ff8a3a"});R.status.burnT--;if(R.status.burnT<=0)R.status.burnS=0;}
   if(R.status.poiS>0){const dmg=Math.max(1,Math.round(R.status.poiS*0.12*(1+(G.talents.emberlord||0)*0.15)*computeStats().atk));R.enemy-=dmg;floatText("enemy","☣️ "+dmg,{color:"#9bff5a"});R.status.poiT--;if(R.status.poiT<=0)R.status.poiS=0;}
@@ -925,7 +930,7 @@ function toast(msg,kind){const t=el("div","toast"+(kind?" "+kind:""),msg);$("toa
 /* ===== SKILL PICK ===== */
 function gainRandomSkill(){var s=SKILLS[Math.floor(Math.random()*SKILLS.length)];try{s.ap(R.skills);}catch(e){}addPicked(s);toast("Gained "+s.n+"!","form");}
 var EVENTS=[
-{ic:"🔥",t:"Campfire",d:"A warm fire crackles in the dark.",opts:[{l:"🛌 Rest — heal 40% HP",f:function(){var h=Math.round(R.hpMax*0.4);R.hp=Math.min(R.hpMax,R.hp+h);toast("Rested +"+h+" HP","heal");}},{l:"🔦 Scavenge — +18 gold",f:function(){R.gold+=18;toast("Found 18 🪙","gold");}}]},
+{ic:"🔥",t:"Campfire",d:"A warm fire crackles in the dark.",opts:[{l:"🛌 Rest — heal 40% HP",f:function(){var h=Math.round(R.hpMax*0.4);R.hp=Math.min(R.hpMax,R.hp+h);toast("Rested +"+h+" HP","heal");}},{l:"🔦 Scavenge — +6 Max HP",f:function(){R.hpMax+=6;R.hp+=6;toast("+6 Max HP","heal");}}]},
 {ic:"💎",t:"Treasure Chest",d:"A dusty chest sits half-buried.",opts:[{l:"🔓 Open — gain a Power",f:function(){gainRandomSkill();}},{l:"❤️ Pry it open — +15 Max HP",f:function(){R.hpMax+=15;R.hp+=15;toast("+15 Max HP","heal");}}]},
 {ic:"🦴",t:"Cursed Bones",d:"Bones pulse with dark energy.",opts:[{l:"😈 Devour — +14 ATK, -8% Max HP",f:function(){R.skills.atk=(R.skills.atk||0)+14;var c=Math.round(R.hpMax*0.08);R.hpMax-=c;R.hp=Math.min(R.hp,R.hpMax);toast("+14 ATK, cursed","form");}},{l:"🚶 Leave them",f:function(){toast("You walk on.");}}]},
 {ic:"⛲",t:"Spirit Well",who:"👻",say:"Drink, and we shall share our strength…",d:"A pale spirit hovers over black water.",opts:[{l:"🩸 Drink — +12% Lifesteal, -10% HP",f:function(){R.skills.ls=(R.skills.ls||0)+0.12;var c=Math.round(R.hpMax*0.1);R.hp=Math.max(1,R.hp-c);toast("Lifesteal up!","form");}},{l:"🚰 Fill flask — heal 25%",f:function(){var h=Math.round(R.hpMax*0.25);R.hp=Math.min(R.hpMax,R.hp+h);toast("+"+h+" HP","heal");}}]},
@@ -933,10 +938,10 @@ var EVENTS=[
 {ic:"😈",t:"Demon Pact",who:"👹",say:"Let me in… just a little deeper.",d:"The demon stirs beneath his fur.",opts:[{l:"🤝 Accept — fill Haunt, -12% HP",f:function(){R.haunt=100;var c=Math.round(R.hpMax*0.12);R.hp=Math.max(1,R.hp-c);toast("Haunt overflows!","form");}},{l:"🙅 Refuse",f:function(){toast("You resist.");}}]},
 {ic:"🏺",t:"Ancient Altar",who:"🗿",say:"Offer something… and be rewarded.",d:"A cracked stone face watches from the altar.",opts:[{l:"🩸 Sacrifice 10% HP — +16 ATK",f:function(){var c=Math.round(R.hpMax*0.1);R.hp=Math.max(1,R.hp-c);R.skills.atk=(R.skills.atk||0)+16;toast("+16 ATK","form");}},{l:"🙏 Pray — heal 30%",f:function(){var h=Math.round(R.hpMax*0.3);R.hp=Math.min(R.hpMax,R.hp+h);toast("+"+h+" HP","heal");}}]},
 {ic:"🛒",t:"Wandering Merchant",who:"🧙",say:"Ahh, a haunted little pup… care to trade?",d:"A cloaked trader blocks the path, grinning.",opts:[{l:"💸 Buy Power — 200 gold",f:function(){if(R.gold>=200){R.gold-=200;gainRandomSkill();}else toast("Not enough gold");}},{l:"👋 Move along",f:function(){toast("Maybe next time.");}}]},
-{ic:"🌀",t:"Mysterious Portal",d:"A rift hums with risk.",opts:[{l:"🚪 Enter — gamble big",f:function(){if(Math.random()<0.55){R.gold+=80;toast("Jackpot! +80 🪙","gold");}else{var c=Math.round(R.hpMax*0.2);R.hp=Math.max(1,R.hp-c);toast("Ambushed! -"+c+" HP");}}},{l:"🚷 Ignore it",f:function(){toast("Too risky.");}}]},
-{ic:"💪",t:"Goblin Ambush",who:"👺",say:"Hand over your bones, mutt!",d:"Three goblins leap from the brush!",opts:[{l:"⚔️ Fight — -15% HP, +55 gold",f:function(){var c=Math.round(R.hpMax*0.15);R.hp=Math.max(1,R.hp-c);R.gold+=55;toast("Won! +55 🪙","gold");}},{l:"🏃 Flee — -50 gold",f:function(){R.gold=Math.max(0,R.gold-50);toast("Dropped 50 🪙");}}]},
+{ic:"🌀",t:"Mysterious Portal",d:"A rift hums with risk.",opts:[{l:"🚪 Enter — gamble big",f:function(){if(Math.random()<0.55){R.skills.atk=(R.skills.atk||0)+12;toast("Jackpot! +12 ATK","form");}else{var c=Math.round(R.hpMax*0.2);R.hp=Math.max(1,R.hp-c);toast("Ambushed! -"+c+" HP");}}},{l:"🚷 Ignore it",f:function(){toast("Too risky.");}}]},
+{ic:"💪",t:"Goblin Ambush",who:"👺",say:"Hand over your bones, mutt!",d:"Three goblins leap from the brush!",opts:[{l:"⚔️ Fight — -15% HP, +10 ATK",f:function(){var c=Math.round(R.hpMax*0.15);R.hp=Math.max(1,R.hp-c);R.skills.atk=(R.skills.atk||0)+10;toast("Won! +10 ATK","form");}},{l:"🏃 Flee — -50 gold",f:function(){R.gold=Math.max(0,R.gold-50);toast("Dropped 50 🪙");}}]},
 {ic:"🛡️",t:"Battle Shrine",d:"A shrine blesses the bold.",opts:[{l:"🛡️ +6 DEF this run",f:function(){R.skills.def=(R.skills.def||0)+6;toast("+6 DEF","form");}},{l:"⚡ +4% Crit this run",f:function(){R.skills.crit=(R.skills.crit||0)+0.04;toast("+4% Crit","form");}}]},
-{ic:"🌿",t:"Healing Spring",d:"Glowing water pools here.",opts:[{l:"💦 Bathe — full heal",f:function(){R.hp=R.hpMax;toast("Fully healed!","heal");}},{l:"🍶 Bottle it — +18 gold",f:function(){R.gold+=18;toast("+18 🪙","gold");}}]},
+{ic:"🌿",t:"Healing Spring",d:"Glowing water pools here.",opts:[{l:"💦 Bathe — full heal",f:function(){R.hp=R.hpMax;toast("Fully healed!","heal");}},{l:"🍶 Bottle it — +5% Lifesteal",f:function(){R.skills.ls=(R.skills.ls||0)+0.05;toast("+5% Lifesteal","form");}}]},
 {ic:"📖",t:"Skill Tome",who:"🦉",say:"Knowledge has a price, hatchling.",d:"A spectral owl guards a glowing tome.",opts:[{l:"📚 Read — gain a Power",f:function(){gainRandomSkill();}},{l:"💪 Channel it — +9 ATK",f:function(){R.skills.atk=(R.skills.atk||0)+9;toast("+9 ATK","form");}}]}
 ];
 function showEvent(cb){var e=EVENTS[Math.floor(Math.random()*EVENTS.length)];
@@ -1037,7 +1042,7 @@ function vpCard(id,icon,name,reward,price){return '<div class="vpack"><div class
 function aFeat(m){save();renderHomeHUD();renderFeatured();toast(m,"gold");}
 function renderFeatured(){var f=$("sp-featured");if(!f)return;var now=Date.now(),ready=(now-(G.lastFree||0))>=60000,freeAmt=40+G.chapter*15;var html='';
 var wkReady=(now-(G.lastWeekly||0))>=6048e5;
-html+='<div style="position:relative;border-radius:18px;overflow:hidden;margin-bottom:12px;padding:16px;background:linear-gradient(135deg,#3a1d5e,#7a3da0 55%,#ffb43d);box-shadow:0 8px 22px #0007">'+
+if((G.heroLevel||1)>=7)html+='<div style="position:relative;border-radius:18px;overflow:hidden;margin-bottom:12px;padding:16px;background:linear-gradient(135deg,#3a1d5e,#7a3da0 55%,#ffb43d);box-shadow:0 8px 22px #0007">'+
  '<div style="position:absolute;top:0;right:0;background:#ffd23d;color:#3a2a06;font-size:10px;font-weight:900;padding:4px 12px;border-bottom-left-radius:12px;letter-spacing:1px">WEEKLY HOARD</div>'+
  '<div style="font-size:34px">📦</div>'+
  '<div style="font-size:13px;color:#fff;opacity:.92;margin:6px 0 10px;font-weight:700">🪙 1500 · 💎 20 · 🦴 15 · ⚙ 200</div>'+
@@ -1231,7 +1236,7 @@ function renderPanel(){const st=computeStats();const ps=$("panelStats");if(ps)ps
 function renderSkillRow(){const r=$("skillRow");if(!r)return;const list=R.pickedList||[];if(!list.length){r.innerHTML='<span class="empty">No powers yet \u2014 level up to choose!</span>';return;}r.innerHTML=list.map(x=>'<div class="skill-chip">'+x.ic+(x.n>1?'<span class="lv">'+x.n+'</span>':'')+'</div>').join("");}
 function makeStars(){const s=$("stars");if(!s)return;let h="";for(let i=0;i<50;i++){const sz=Math.random()<0.2?2.5:1.5;h+='<span class="star" style="left:'+(Math.random()*100)+'%;top:'+(Math.random()*64)+'%;width:'+sz+'px;height:'+sz+'px;animation-delay:'+(Math.random()*3).toFixed(1)+'s"></span>';}s.innerHTML=h;}
 function init(){load();document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
-  $("enterBtn").onclick=()=>enterChapter();$("skinTag").onclick=()=>switchTab("shop");$("menuBtn").onclick=()=>confirmMenu();$("speedBtn2").onclick=()=>{R.speed=R.speed===1?2:1;$("speedBtn2").textContent=R.speed+"\u00D7";};
+  $("enterBtn").onclick=()=>enterChapter();$("skinTag").onclick=()=>switchTab("shop");$("menuBtn").onclick=()=>confirmMenu();$("speedBtn2").onclick=()=>{if((G.heroLevel||1)<4){toast("⚡ 2× speed unlocks at Hero Lv 4");return;}R.speed=R.speed===1?2:1;$("speedBtn2").textContent=R.speed+"\u00D7";};
   document.querySelectorAll("#shopTabs .stab").forEach(function(t){t.onclick=function(){switchShopTab(t.dataset.s);};});makeStars();renderHome();checkIdle();setInterval(save,5000);window.addEventListener("beforeunload",save);}
 if(typeof document!=="undefined"&&document.getElementById("phone"))init();
 if(typeof module!=="undefined")module.exports={freshState,freshSkills,computeStats,metaBase,makeGear,rollRarity,gearEff,enhanceCost,affix,onHit,biomeOf,enemyForNode,heroSVG,SKINS,skinById,SKILLS,TALENTS,AFFIXES,RARITY,SLOTS,BIOMES,UNLEASH,unleashMult,enterChapter,startEncounter,exchange,encounterWin,runComplete,runFail,buySkin,equip,get G(){return G;},setG(s){G=s;},get R(){return R;}};
